@@ -1,0 +1,70 @@
+<div ng-if="controller.client">
+
+  <h1>
+    {$ controller.client.os_info.fqdn $}
+    <span>{$ controller.clientId $}</span>
+  </h1>
+
+  <div ng-if="!readOnly">
+    <grr-check-client-access client-id="controller.clientId" no-redirect="true"
+                             out-has-access="controller.hasClientAccess">
+    </grr-check-client-access>
+
+    <div class="no-approval alert alert-danger alert-block"
+         ng-if="controller.hasClientAccess !== undefined && !controller.hasClientAccess">
+      <i class="fa fa-warning"></i> You do not have an <b>approval</b> for this client. <br/>
+
+      <button name="requestApproval" class="btn btn-default"
+              ng-click="controller.requestApproval()">Request Approval</button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="client-actions">
+
+    <button ng-if="!readOnly"
+            class="btn btn-default"
+            ng-click="controller.interrogate()"
+            ng-disabled="controller.interrogateOperationId">
+      <i class="fa fa-search-plus"
+         ng-if="!controller.interrogateOperationId"></i>
+      <i class="fa fa-spinner fa-spin fa-fw"
+          ng-if="controller.interrogateOperationId"></i>
+      Interrogate
+    </button>
+
+    <div class="btn-group" data-toggle="buttons">
+      <label class="btn btn-default active" ng-click="controller.showDetails = false">
+        <input type="radio" name="show-client-details" checked> Overview
+      </label>
+      <label class="btn btn-default" ng-click="controller.showDetails = true">
+        <input type="radio" name="show-client-details"> VQL Drilldown
+      </label>
+    </div>
+
+    <div class="clearfix"></div>
+  </div>
+
+
+  <!-- Client Details -->
+  <div class="client-details" ng-if="!controller.showDetails"
+       grr-force-refresh refresh-trigger="controller.client">
+    <grr-semantic-proto
+       type="ApiClient"
+       client="::controller.client"
+       value="::controller.client"
+       hidden-fields="['info']">
+    </grr-semantic-proto>
+  </div>
+
+  <!-- Shows the full view on the client with all properties and in full details -->
+  <div class="client-details"
+       ng-if="controller.showDetails"
+       grr-force-refresh refresh-trigger="controller.client">
+    <div ng-repeat="item in ::controller.client.info">
+      <grr-vql
+         value="::item">
+      </grr-vql>
+    </div>
+  </div>
+</div>

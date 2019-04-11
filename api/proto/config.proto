@@ -1,0 +1,376 @@
+// These are the messages used in client actions.
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
+
+package proto;
+
+// Information about Velociraptor. This is a psuedo config item - it
+// will never be read from config files, but can be used in VQL
+// queries. It will be written to config files as metadata about the
+// version read from.
+message Version {
+    string name = 1 [(sem_type) = {
+            description: "The client's name."
+        }];
+
+    string description = 2 [(sem_type) = {
+            description: "The client's long description string"
+        }];
+
+    string version = 3 [(sem_type) = {
+            description: "The client's version string using a semantic versioning scheme."
+        }];
+
+    string commit = 4 [(sem_type) = {
+            description: "The client's git commit string."
+        }];
+
+    string build_time = 5 [(sem_type) = {
+            description: "When the client was built."
+        }];
+}
+
+// The client's state which are persisted in the writeback file.
+message Writeback {
+    string private_key = 7 [(sem_type) = {
+            description: "The client's private key in PEM encoding."
+        }];
+
+    uint64 hunt_last_timestamp = 13 [(sem_type) = {
+            description: "The last hunt timestamp this client ran."
+        }];
+
+    uint64 last_server_serial_number = 14 [(sem_type) = {
+            description: "The last certificate serial number we saw from the server. Clients refuse to connect to servers with older serial numbers as part of server key rotation protocol."
+        }];
+}
+
+// Configuration for the windows installer.
+message WindowsInstallerConfig {
+    string service_name = 1 [(sem_type) = {
+            description: "The name of the service to create."
+        }];
+    string install_path = 2 [(sem_type) = {
+            description: "Where should the binary be installed? The install command "
+            "copies the binary to this location and installs the service.",
+        }];
+}
+
+
+message DarwinInstallerConfig {
+    string service_name = 1 [(sem_type) = {
+            description: "The name of the service to create."
+        }];
+    string install_path = 2 [(sem_type) = {
+            description: "Where should the binary be installed? The install command "
+            "copies the binary to this location and installs the service.",
+        }];
+}
+
+message ClientConfig {
+    repeated string labels = 6 [(sem_type) = {
+            description: "A list of labels the client has. This allows selected groups of clients to be targetted in hunts."
+        }];
+
+    repeated string server_urls = 8 [(sem_type) = {
+            description: "A list of server URLs the client will try to connect to."
+        }];
+
+    string ca_certificate = 11 [(sem_type) = {
+            description: "The CA's certificate encoded in PEM. The client will trust any server signed with this CA."
+        }];
+
+    string nonce = 12 [(sem_type) = {
+            description: "A shared nonce the client will present. The server will reject clients which do not present this key so it must be embedded in the client's configuration."
+        }];
+
+    string writeback_darwin = 20 [(sem_type) = {
+            description: "A path where darwin clients will write local state."
+        }];
+
+    string writeback_linux = 9 [(sem_type) = {
+            description: "A path where linux clients will write local state."
+        }];
+
+    string writeback_windows = 10 [(sem_type) = {
+            description: "A path where windows clients will write local state."
+        }];
+
+    uint64 max_poll = 15 [(sem_type) = {
+            description: "The maximum number of seconds between server polls."
+            default: "600",
+        }];
+
+    WindowsInstallerConfig windows_installer = 16 [(sem_type) = {
+            description: "Configuration of the windows installer.",
+        }];
+
+    DarwinInstallerConfig darwin_installer = 21 [(sem_type) = {
+            description: "Configuration of the windows installer.",
+        }];
+
+    bool prevent_execve = 17 [(sem_type) = {
+            description: "If this is set, prevent arbitrary code execution on clients."
+        }];
+
+    Version version = 18 [(sem_type) = {
+            description: "The version information for this client.",
+        }];
+
+    uint64 default_max_wait = 19 [(sem_type) = {
+            description: "The default max time to wait before we send partial VQL results.",
+        }];
+}
+
+message APIConfig {
+    string bind_address = 1 [(sem_type) = {
+            description: "Address to bind gRPC endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
+        }];
+
+    uint32 bind_port = 2 [(sem_type) = {
+            description: "Port to bind to."
+        }];
+
+    string bind_scheme = 3 [(sem_type) = {
+            description: "A scheme for the listening socket (e.g. tcp, unix).",
+            default: "unix",
+        }];
+}
+
+// Configuration to be consumed by api clients.
+message ApiClientConfig {
+    string ca_certificate = 1 [(sem_type) = {
+            description: "The CA certificate used to verify API connections.",
+        }];
+
+    string client_cert = 2 [(sem_type) = {
+            description: "A client certificate that belongs to this client. "
+               "Generated from the 'velociraptor config api_client' command."
+        }];
+
+    string client_private_key = 3 [(sem_type) = {
+            description: "Private key to go with the client_cert.",
+        }];
+
+    string api_connection_string = 4 [(sem_type) = {
+            description: "Location where the api endpoint will be available.",
+        }];
+
+    string name = 5 [(sem_type) = {
+            description: "The CommonName for this API client.",
+        }];
+}
+
+message GUIConfig {
+    string bind_address = 1 [(sem_type) = {
+            description: "Address to bind GUI endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
+        }];
+
+    uint32 bind_port = 2 [(sem_type) = {
+            description: "Port to bind to."
+        }];
+
+    repeated string internal_cidr = 3 [(sem_type) = {
+            description: "CIDR addresses of internal networks (e.g. 192.168.0.0/16). We use this to show the internal/external icon."
+        }];
+
+    repeated string vpn_cidr = 4 [(sem_type) = {
+            description: "CIDR addresses of vpn networks (e.g. 192.168.0.0/16). We use this to show the internal/external icon."
+        }];
+
+    string google_oauth_client_id = 5 [(sem_type) = {
+            description: "If set we use oauth authentication flow.",
+        }];
+
+    string google_oauth_client_secret = 6 [(sem_type) = {
+            description: "If set we use oauth authentication flow.",
+        }];
+
+    string public_url = 7 [(sem_type) = {
+            description: "The public URL of this server.",
+        }];
+}
+
+message CAConfig {
+    string private_key = 1 [(sem_type) = {
+            description: "The private key of the CA encoded in PEM. This must correspond with the certificate in Client.ca_certificate."
+        }];
+}
+
+
+message FrontendConfig {
+    string bind_address = 1 [(sem_type) = {
+            description: "Address to bind frontend endpoint. Clients connect to this endpoint to poll for jobs."
+        }];
+
+    uint32 bind_port = 2 [(sem_type) = {
+            description: "Port to bind to."
+        }];
+
+    string certificate = 3 [(sem_type) = {
+            description: "X509 Certificate of frontend server."
+        }];
+
+    string private_key = 4 [(sem_type) = {
+            description: "The private key of the frontend server encoded in PEM format."
+        }];
+
+    string dns_name = 6 [(sem_type) = {
+            description: "The DNS name of the frontend."
+        }];
+
+    string artifacts_path = 7 [(sem_type) = {
+            description: "Path to additional artifacts to load",
+        }];
+
+    string public_path = 8 [(sem_type) = {
+            description: "If specified we export this path through the /public/ handler.",
+        }];
+
+    uint64 concurrency = 9 [(sem_type) = {
+            description: "The number of client messages to process concurrently.",
+        }];
+}
+
+
+message DatastoreConfig {
+    string implementation = 1 [(sem_type) = {
+            description: "The name of the datastore implementation to use."
+            default: "FileBaseDataStore",
+        }];
+
+    string location = 2 [(sem_type) = {
+            description: "The location (or path) to the datastore.",
+        }];
+
+    string filestore_directory = 3 [(sem_type) = {
+            description: "The path to store uploaded files."
+        }];
+}
+
+
+message FlowsConfig {
+    repeated VQLRequest interrogate_additional_queries = 1 [(sem_type) = {
+            description: "Additional queries to issue to Interrogate flows."
+        }];
+}
+
+// Event generators for the client. Note: These are sent from the
+// server to the client and are not embedded in the client.
+message ClientEvents {
+    repeated string artifacts = 1 [(sem_type) = {
+            description: "Events will be collected from the client using these artifacts."
+        }];
+
+    uint64 version = 2 [(sem_type) = {
+            description: "An incrementing version of collection requests.",
+        }];
+
+    float ops_per_second = 24 [(sem_type) = {
+            description: "Default rate limiting for client event monitoring."
+        }];
+}
+
+// Configuration for the mail server.
+message MailConfig {
+    string from = 1 [(sem_type) = {
+            description: "Where the email should be sent from. If not set we use the auth_username.",
+        }];
+
+    string server = 2 [(sem_type) = {
+            description: "Address of the SMTP server.",
+        }];
+
+    uint64 server_port = 3 [(sem_type) = {
+            description: "Port of the SMTP server",
+        }];
+
+    string auth_username = 4 [(sem_type) = {
+            description: "Name to authenticate under.",
+        }];
+
+    string auth_password = 5 [(sem_type) = {
+            description: "password to authenticate with.",
+        }];
+}
+
+message LoggingConfig {
+    string output_directory = 1 [(sem_type) = {
+            description: "The location to write log files. "
+            "If not set we write no log files.",
+        }];
+
+    bool separate_logs_per_component = 2 [(sem_type) = {
+            description: "If set, each component will log to a separate file.",
+        }];
+
+    uint64 rotation_time = 3 [(sem_type) = {
+            description: "How often to rotate the files.",
+        }];
+
+    uint64 max_age = 4 [(sem_type) = {
+            description: "Maximum age of each file.",
+        }];
+
+}
+
+message Config {
+    Version version = 8 [(sem_type) = {
+            description: "Version information."
+        }];
+
+    ClientConfig Client = 1 [(sem_type) = {
+            description: "Client configuration."
+        }];
+
+    ClientEvents Events = 10 [(sem_type) = {
+            description: "Events to collect from clients."
+        }];
+
+    APIConfig API = 2 [(sem_type) = {
+            description: "Configuration for gRPC API endpoint."
+    }];
+
+    GUIConfig GUI = 3;
+
+    CAConfig CA = 4;
+
+    FrontendConfig Frontend = 5;
+
+    DatastoreConfig Datastore = 6;
+
+    FlowsConfig Flows = 7;
+
+    Writeback Writeback = 9 [(sem_type) = {
+            description: "Contents of the client's state as stored in the writeback file."
+        }];
+
+    MailConfig Mail = 11;
+
+    LoggingConfig Logging = 23;
+
+    bool verbose = 20 [(sem_type) = {
+            description: "Enable verbose logging output.",
+        }];
+
+    string autocert_domain = 21 [(sem_type) = {
+            description: "Domain to use for autocerts (letsencrypt). "
+            "This must be resolvable to the frontend via DNS."
+            "NOTE: When this is set, both the GUI and frontend will "
+            "use ports 80 and 443 - the client.server_urls must be of the form "
+            " https://autocert_domain/",
+        }];
+
+    string autocert_cert_cache = 22 [(sem_type) = {
+            description: "Path to store autocert certificates.",
+        }];
+
+    bool use_self_signed_ssl = 24 [(sem_type) = {
+            description: "If set we use self signed SSL to encrypt Frontend and GUI comms. "
+               "This option is incompatible with autocert_domain. "
+               "Unlike autocert_domain we can listen on any port. "
+               "This also forces the client to only trust certificates issued by our CA.",
+        }];
+}

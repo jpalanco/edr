@@ -1,0 +1,17 @@
+
+<div ng-if='artifactNames.length > 0'>
+  <div>
+    <select class="form-control pull-left"
+            ng-options="artifact for artifact in artifactNames"
+            ng-model="controller.selectedArtifact"
+            id="plugin-select">
+    </select>
+  </div>
+
+  <div>
+    <grr-csv-viewer
+      base-url='"v1/GetTable"'
+      params='controller.queryParams'
+      />
+  </div>
+</div>

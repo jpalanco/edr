@@ -1,0 +1,231 @@
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
+import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
+import "www.velocidex.com/golang/velociraptor/flows/proto/vfs.proto";
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+// Files within the same directory must be imported relatively.
+import "artifacts.proto";
+import "clients.proto";
+import "hunts.proto";
+import "flows.proto";
+import "users.proto";
+import "csv.proto";
+
+package proto;
+
+message StartFlowResponse {
+    string flow_id = 1;
+    FlowRunnerArgs runner_args = 2;
+}
+
+message Approval {
+    string reason = 1;
+}
+
+message ApprovalList {
+    repeated Approval items = 1;
+}
+
+message VFSRefreshDirectoryRequest {
+    string client_id = 1 [(sem_type) = {
+            description: "The client to list",
+            type: "RDFURN",
+            label: HIDDEN,
+        }];
+
+    string vfs_path = 2 [(sem_type) = {
+            description: "The VFS Path to list files in .",
+        }];
+
+    uint64 depth = 3 [(sem_type) = {
+            description: "Depth of directory refresh",
+        }];
+}
+
+
+message NotificationRequest {
+    string client_id = 1;
+
+    bool notify_all = 2;
+}
+
+
+service API {
+    rpc LaunchFlow(FlowRunnerArgs) returns (StartFlowResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/LaunchFlow",
+            body: "*"
+        };
+    }
+
+    // Hunts
+    rpc CreateHunt(Hunt) returns (StartFlowResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/CreateHunt",
+            body: "*"
+        };
+    }
+
+    rpc ListHunts(ListHuntsRequest) returns (ListHuntsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/ListHunts",
+        };
+    }
+
+    rpc GetHunt(GetHuntRequest) returns (Hunt) {
+        option (google.api.http) = {
+            get: "/api/v1/GetHunt",
+        };
+    }
+
+    rpc ModifyHunt(Hunt) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/ModifyHunt",
+            body: "*"
+        };
+    }
+
+    rpc GetHuntResults(GetHuntResultsRequest) returns (GetTableResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/GetHuntResults",
+        };
+    }
+
+    // Clients.
+    rpc NotifyClients(NotificationRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/NotifyClient",
+            body: "*"
+        };
+    }
+
+    rpc LabelClients(LabelClientsRequest) returns (APIResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/LabelClients",
+            body: "*"
+        };
+    }
+
+    rpc ListClients(SearchClientsRequest) returns (SearchClientsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/SearchClients",
+        };
+    }
+
+    rpc GetClient(GetClientRequest) returns (ApiClient) {
+        option (google.api.http) = {
+            get: "/api/v1/GetClient/{client_id}",
+        };
+    }
+
+    rpc GetClientFlows(ApiFlowRequest) returns (ApiFlowResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/GetClientFlows/{client_id}",
+            additional_bindings: {
+                custom: {
+                    kind: "HEAD",
+                    path: "/api/v1/GetClientFlows/{client_id}",
+                },
+            }
+        };
+    }
+
+    rpc GetClientApprovalForUser(GetClientRequest) returns (ApprovalList) {
+        option (google.api.http) = {
+            get: "/api/v1/GetApprovals/{client_id}",
+        };
+    }
+
+    // Users
+    rpc GetUserUITraits(google.protobuf.Empty) returns (ApiGrrUser) {
+        option (google.api.http) = {
+            get: "/api/v1/GetUserUITraits",
+        };
+    }
+
+    rpc GetUserNotifications(GetUserNotificationsRequest) returns (GetUserNotificationsResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/GetUserNotifications",
+            body: "*"
+        };
+    }
+
+    rpc GetUserNotificationCount(google.protobuf.Empty) returns (UserNotificationCount) {
+        option (google.api.http) = {
+            get: "/api/v1/GetUserNotificationCount",
+        };
+    }
+
+    // VFS
+    rpc VFSListDirectory(VFSListRequest) returns (VQLResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/VFSListDirectory/{client_id}",
+        };
+    }
+
+    rpc VFSRefreshDirectory(VFSRefreshDirectoryRequest) returns (StartFlowResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/VFSRefreshDirectory/{client_id}",
+            body: "*",
+        };
+    }
+
+    rpc GetTable(GetTableRequest) returns (GetTableResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/GetTable",
+        };
+    }
+
+    // Flows
+    rpc GetFlowDetails(ApiFlowRequest) returns (ApiFlow) {
+        option (google.api.http) = {
+            get: "/api/v1/GetFlowDetails/{client_id}",
+        };
+    }
+
+    rpc GetFlowRequests(ApiFlowRequest) returns (ApiFlowRequestDetails) {
+        option (google.api.http) = {
+            get: "/api/v1/GetFlowDetails/{client_id}/{flow_id}/requests",
+        };
+    }
+
+    rpc GetFlowDescriptors(google.protobuf.Empty) returns (FlowDescriptors) {
+        option (google.api.http) = {
+            get: "/api/v1/flows/descriptors",
+        };
+    }
+
+    rpc DescribeTypes(google.protobuf.Empty) returns (Types) {
+        option (google.api.http) = {
+            get: "/api/v1/DescribeTypes",
+        };
+    }
+
+    // Artifacts
+    rpc GetArtifacts(google.protobuf.Empty) returns (ArtifactDescriptors) {
+        option (google.api.http) = {
+            get: "/api/v1/GetArtifacts",
+        };
+    }
+
+    rpc GetArtifactFile(GetArtifactRequest) returns (GetArtifactResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/GetArtifactFile",
+        };
+    }
+
+    rpc SetArtifactFile(SetArtifactRequest) returns (APIResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/SetArtifactFile",
+            body: "*",
+        };
+    }
+
+    // Streaming free form VQL
+    rpc Query(VQLCollectorArgs) returns (stream VQLResponse) {}
+}

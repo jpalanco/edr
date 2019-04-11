@@ -1,0 +1,5 @@
+Queries:
+  - SELECT Authors, ClientId, FullPath, License, Name, Summary, Version
+    FROM collected_artifact(
+       client_id='C.11a3013cca8f826e',
+       artifact='Windows.Applications.ChocolateyPackages')

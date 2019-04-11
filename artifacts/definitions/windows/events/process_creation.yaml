@@ -1,0 +1,30 @@
+name: Windows.Events.ProcessCreation
+description: |
+  Collect all process creation events.
+parameters:
+  - name: wmiQuery
+    default: SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE
+      TargetInstance ISA 'Win32_Process'
+  - name: eventQuery
+    default: SELECT * FROM Win32_ProcessStartTrace
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+    queries:
+      - |
+        // Convert the timestamp from WinFileTime to Epoch.
+        SELECT timestamp(epoch=atoi(string=Parse.TIME_CREATED) / 10000000 - 11644473600 ) as Timestamp,
+               Parse.ParentProcessID as PPID,
+               Parse.ProcessID as PID,
+               Parse.ProcessName as Name, {
+                 SELECT CommandLine
+                 FROM wmi(
+                   query="SELECT * FROM Win32_Process WHERE ProcessID = " +
+                    format(format="%v", args=Parse.ProcessID),
+                   namespace="ROOT/CIMV2")
+               } AS CommandLine
+        FROM wmi_events(
+           query=eventQuery,
+           wait=5000000,   // Do not time out.
+           namespace="ROOT/CIMV2")

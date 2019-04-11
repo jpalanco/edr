@@ -1,0 +1,31 @@
+<h4>
+  <abbr title='{$ value.Query.VQL $}'>
+    {$ value.Query.Name $}
+    <span ng-if="value.part > 0">
+      Part {{ value.part }}
+    </span>
+    <span ng-if="value.timestamp">
+      @ <grr-timestamp value="value.timestamp" />
+    </span>
+  </abbr>
+</h4>
+<table class="table table-striped table-condensed table-hover table-bordered full-width vql-table">
+  <thead>
+    <tr>
+      <th ng-repeat="column in ::controller.columns">{$ ::column $}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="row in ::controller.payload"
+        ng-click="controller.selectRow_(row)">
+      <td ng-repeat="column in ::controller.columns">
+        <div ng-if="::!controller.type_map[column]">
+          {{ ::row[column] }}
+        </div>
+        <div ng-if="::controller.type_map[column]">
+          <grr-semantic-value value="::row[column]" type="{$ controller.type_map[column] $}" />
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>

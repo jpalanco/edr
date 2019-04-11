@@ -1,0 +1,76 @@
+<div ng-if="flowId && !flow">
+  Loading...
+</div>
+
+<div ng-if="flow">
+
+  <dl class="dl-horizontal dl-flow">
+    <grr-force-refresh refresh-trigger="flow">
+
+      <div ng-if="::flow.internal_error">
+        <br>
+        <dt class="alert-danger danger">Error while Opening</dt>
+        <dd>{$ ::flow.internal_error $}</dd>
+        <br><br>
+      </div>
+
+      <dt>Name</dt>
+      <dd><grr-semantic-value value="::flow.name" /></dd>
+
+      <dt>Flow ID</dt>
+      <dd><grr-semantic-value value="::flow.flow_id" /></dd>
+
+      <dt>Creator</dt>
+      <dd><grr-semantic-value value="::flow.creator" /></dd>
+
+      <dt>Start Time</dt>
+      <dd><grr-timestamp value="flow.context.create_time" /></dd>
+
+      <dt>Last Active</dt>
+      <dd><grr-timestamp value="flow.context.active_time" /></dd>
+
+      <dt>State</dt>
+      <dd><grr-semantic-value value="::flow.context.state" /></dd>
+      <br>
+    </grr-force-refresh>
+
+    <!-- Don't auto-refresh arguments since they don't change during
+         the lifetime of the flow. -->
+    <dt>Runner Arguments</dt>
+    <dd>
+      <grr-semantic-value value="::flow.runner_args"
+                          type="FlowRunnerArgs"
+                          ng-if="::flow.runner_args">
+      </grr-semantic-value>
+      <span ng-if="!flow.runner_args">-</span>
+    </dd>
+    <br>
+
+    <!-- As context may be UI-heavy, only update it when it actually
+         changes. -->
+    <grr-force-refresh refresh-trigger="flow.context">
+      <dt>Context</dt>
+      <dd>
+        <grr-semantic-value value="::flow.context"
+                            type="FlowContext"
+                            hidden-fields="['logs']">
+        </grr-semantic-value>
+        <span ng-if="::!flow.context">-</span>
+      </dd>
+      <br>
+    </grr-force-refresh>
+
+    <!-- As state may be UI-heavy, only update it when it actually
+         changes. -->
+    <grr-force-refresh refresh-trigger="flow.state_data">
+      <dt>State Data</dt>
+      <dd>
+        <grr-semantic-value value="::flow.state_data">
+        </grr-semantic-value>
+        <span ng-if="::!flow.state_data">-</span>
+      </dd>
+      <br>
+    </grr-force-refresh>
+  </dl>
+
+</div>

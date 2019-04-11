@@ -1,0 +1,44 @@
+<div class="padded">
+
+  <div ng-if="!huntId">
+    Please select a hunt to see its details here.
+  </div>
+
+  <uib-tabset ng-if="huntId && controller.huntId"
+              active="controller.activeTab">
+    <uib-tab heading="Overview" index="''">
+      <grr-hunt-overview hunt="controller.hunt"
+                         ng-if="controller.tabsShown['']">
+      </grr-hunt-overview>
+    </uib-tab>
+
+    <uib-tab heading="Download" index="'download'">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Download</h4>
+
+          <p class="card-text">
+            Click the link below to download the hunt results as a zip file.
+          </p>
+          <button class="btn btn-default"
+                  ng-click="controller.downloadFile()">
+            Download
+          </button>
+        </div>
+      </div>
+    </uib-tab>
+
+    <uib-tab heading="Results" index="'results'">
+      <grr-hunt-results hunt="controller.hunt"
+                        hunt-id="controller.huntId"
+                        ng-if="controller.tabsShown['results']">
+      </grr-hunt-results>
+    </uib-tab>
+
+    <uib-tab heading="Clients" index="'clients'">
+      <grr-hunt-clients hunt-id="controller.huntId"
+                        ng-if="controller.tabsShown['clients']">
+      </grr-hunt-clients>
+    </uib-tab>
+
+</div>

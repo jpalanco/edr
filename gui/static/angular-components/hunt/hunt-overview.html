@@ -1,0 +1,23 @@
+<div ng-if="!hunt">
+  Loading...
+</div>
+
+<div ng-if="hunt">
+
+  <dl class="dl-horizontal dl-hunt">
+
+    <grr-force-refresh refresh-trigger="hunt">
+
+      <div ng-if="::hunt.internal_error">
+        <br>
+        <dt class="alert-danger danger">Error while Opening</dt>
+        <dd>{$ ::hunt.internal_error $}</dd>
+        <br><br>
+      </div>
+
+      <grr-semantic-value value="::hunt" type="Hunt" />
+    </grr-force-refresh>
+
+  </dl>
+
+</div>

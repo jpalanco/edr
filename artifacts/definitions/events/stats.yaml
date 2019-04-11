@@ -1,0 +1,20 @@
+name: Generic.Client.Stats
+description: An Event artifact which generates client's CPU and memory statistics.
+parameters:
+  - name: Frequency
+    description: Return stats every this many seconds.
+    default: "10"
+
+sources:
+  - queries:
+      - |
+        SELECT * from foreach(
+         row={
+           SELECT UnixNano FROM clock(period=atoi(string=Frequency))
+         },
+         query={
+           SELECT UnixNano / 1000000000 as Timestamp,
+                  Times.user + Times.system as CPU,
+                  MemoryInfo.RSS as RSS
+           FROM pslist(pid=getpid())
+         })
